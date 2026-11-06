@@ -1,20 +1,46 @@
-import { useState } from 'react'
-import { LINHAS, VEICULOS, SENTIDOS } from '../data/mockData'
+import { useState, useEffect } from 'react';
+import { SENTIDOS } from '../data/mockData';
+import { api } from '../services/api';
 
 export default function SelecaoViagem({ onIniciar }) {
-  const [linhaId, setLinhaId] = useState('')
-  const [veiculoId, setVeiculoId] = useState('')
-  const [sentido, setSentido] = useState('ida')
+  const [linhas, setLinhas] = useState([]);
+  const [veiculos, setVeiculos] = useState([]);
 
-  const veiculosDisponiveis = VEICULOS.filter((v) => v.linhaId === linhaId)
-  const podeIniciar = linhaId && veiculoId
+  const [linhaId, setLinhaId] = useState('');
+  const [veiculoId, setVeiculoId] = useState('');
+  const [sentido, setSentido] = useState('ida');
+  const [loading, setLoading] = useState(true);
+
+  // Busca as linhas assim que a tela abre
+  useEffect(() => {
+    api.getLinhas()
+      .then(data => setLinhas(data))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Busca os veículos sempre que a linha muda
+  useEffect(() => {
+    if (!linhaId) {
+      setVeiculos([]);
+      setVeiculoId('');
+      return;
+    }
+    api.getVeiculos(linhaId)
+      .then(data => setVeiculos(data))
+      .catch(err => console.error(err));
+  }, [linhaId]);
+
+  const podeIniciar = linhaId && veiculoId;
 
   const handleIniciar = () => {
-    if (!podeIniciar) return
-    const linha = LINHAS.find((l) => l.id === linhaId)
-    const veiculo = VEICULOS.find((v) => v.id === veiculoId)
-    onIniciar({ linha, veiculo, sentido })
-  }
+    if (!podeIniciar) return;
+    const linha = linhas.find((l) => l.id === linhaId);
+    const veiculo = veiculos.find((v) => v.id === veiculoId);
+    onIniciar({ linha, veiculo, sentido });
+  };
+
+  if (loading) return <div className="p-4 text-center">Carregando linhas...</div>;
 
   return (
     <div className="p-4 space-y-4">
@@ -24,10 +50,10 @@ export default function SelecaoViagem({ onIniciar }) {
 
         <label className="block mb-4">
           <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Linha</span>
-          <select value={linhaId} onChange={(e) => { setLinhaId(e.target.value); setVeiculoId('') }}
+          <select value={linhaId} onChange={(e) => setLinhaId(e.target.value)}
             className="mt-1.5 w-full px-4 py-3.5 rounded-xl border border-slate-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Escolha a linha</option>
-            {LINHAS.map((l) => <option key={l.id} value={l.id}>{l.codigo} — {l.nome}</option>)}
+            {linhas.map((l) => <option key={l.id} value={l.id}>{l.codigo} — {l.nome}</option>)}
           </select>
         </label>
 
@@ -36,7 +62,7 @@ export default function SelecaoViagem({ onIniciar }) {
           <select value={veiculoId} onChange={(e) => setVeiculoId(e.target.value)} disabled={!linhaId}
             className="mt-1.5 w-full px-4 py-3.5 rounded-xl border border-slate-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-400">
             <option value="">{linhaId ? 'Escolha o veículo' : 'Escolha a linha primeiro'}</option>
-            {veiculosDisponiveis.map((v) => <option key={v.id} value={v.id}>{v.numeroCarro} · {v.placa}</option>)}
+            {veiculos.map((v) => <option key={v.id} value={v.id}>{v.numero_carro} · {v.placa}</option>)}
           </select>
         </label>
 
@@ -57,12 +83,6 @@ export default function SelecaoViagem({ onIniciar }) {
           Iniciar viagem
         </button>
       </div>
-
-      <div className="bg-white rounded-xl shadow-sm p-4">
-        <p className="text-xs text-slate-500 leading-relaxed">
-          <span className="font-semibold text-slate-700">Como funciona:</span> após iniciar, você reportará a lotação tocando em um dos 4 botões. O GPS é capturado automaticamente e um alerta é emitido a cada 10 minutos.
-        </p>
-      </div>
     </div>
-  )
+  );
 }
