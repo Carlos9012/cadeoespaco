@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # 1. Back-end FastAPI
+  backend:
+    build:
+      context: ./cadeoespaco-motorista/backend
+    container_name: cadeoespaco-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./cadeoespaco-motorista/backend/.env
+    restart: unless-stopped
+
+  # 2. Front-end do Motorista (PWA)
+  front-motorista:
+    build:
+      context: ./cadeoespaco-motorista/front
+    container_name: cadeoespaco-motorista
+    ports:
+      - "8081:80"  # Acessível em http://localhost:8081
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # 3. Front-end do Painel da Empresa
+  front-painel:
+    build:
+      context: ./cadeoespaco-painel
+    container_name: cadeoespaco-painel
+    ports:
+      - "8080:80"  # Acessível em http://localhost:8080
+    depends_on:
+      - backend
+    restart: unless-stopped

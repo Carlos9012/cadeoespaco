@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, Query
+﻿from fastapi import APIRouter, Depends, Query
 from datetime import datetime, timedelta, timezone
 
-import libsql_client
 
 from ..db import get_db
 
@@ -25,7 +24,7 @@ def _periodo_para_data(periodo: str) -> str:
 async def lotacao_agregada(
     periodo: str = Query("hoje"),
     linha: str = Query("Todas"),
-    db: libsql_client.Client = Depends(get_db),
+    db = Depends(get_db),
 ):
     desde = _periodo_para_data(periodo)
     where = "WHERE criado_em >= ?"
@@ -60,7 +59,7 @@ async def lotacao_agregada(
 async def lotacao_ranking(
     periodo: str = Query("hoje"),
     linha: str = Query("Todas"),
-    db: libsql_client.Client = Depends(get_db),
+    db = Depends(get_db),
 ):
     desde = _periodo_para_data(periodo)
     where = "WHERE r.criado_em >= ?"
@@ -100,7 +99,7 @@ async def trechos_criticos(
     periodo: str = Query("hoje"),
     linha: str = Query("Todas"),
     limite: int = Query(5),
-    db: libsql_client.Client = Depends(get_db),
+    db = Depends(get_db),
 ):
     desde = _periodo_para_data(periodo)
     where = "WHERE criado_em >= ?"
@@ -141,7 +140,7 @@ async def trechos_criticos(
 async def kpis(
     periodo: str = Query("hoje"),
     linha: str = Query("Todas"),
-    db: libsql_client.Client = Depends(get_db),
+    db = Depends(get_db),
 ):
     desde = _periodo_para_data(periodo)
     where = "WHERE criado_em >= ?"
